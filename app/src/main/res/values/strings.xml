@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">EllipseSDKDemo</string>
+    <string name="app_title">Ellipse SDK Demo</string>
+    <string name="action_settings">Settings</string>
+    <string name="connect_lock_label">Connect Lock</string>
+    <string name="scan_lock_label">Scan Ellipse(s)</string>
+    <string name="hint_lock_mac_address_label">Ellipse\'s Mac Address</string>
+    <string name="hint_token_label">Authorization Token</string>
+    <string name="scan_ellipse_instruction">Scan Ellilpse (click):</string>
+
+    <string name="ellipse_lock_label">Click to Lock</string>
+    <string name="ellipse_unlock_label">Click to UnLock</string>
+</resources>

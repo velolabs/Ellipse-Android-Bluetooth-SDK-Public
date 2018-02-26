@@ -1,0 +1,1 @@
+include ':app', ':Ellipse-Android-Bluetooth-SDK'
