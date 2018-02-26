@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true">
+
+        <EditText
+            android:id="@+id/et_token"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:padding="16dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:hint="@string/hint_token_label"
+            />
+
+        <EditText
+            android:id="@+id/et_lock_macaddress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:padding="16dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_below="@+id/et_token"
+            android:hint="@string/hint_lock_mac_address_label"
+            />
+
+        <TextView
+            android:id="@+id/tv_connect_lock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerInParent="true"
+            android:padding="16dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_below="@+id/et_lock_macaddress"
+            android:layout_marginTop="20dp"
+            android:text="@string/connect_lock_label"
+            />
+    </RelativeLayout>
+
+</RelativeLayout>
