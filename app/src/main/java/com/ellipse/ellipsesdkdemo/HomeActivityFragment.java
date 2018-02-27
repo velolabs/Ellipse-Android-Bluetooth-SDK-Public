@@ -52,6 +52,8 @@ public class HomeActivityFragment extends Fragment {
     TextView tv_ellipse_lock_unlock;
     TextView tv_lock_title;
     TextView tv_scan_ellipse;
+    TextView tv_ellipse_rssi;
+    TextView tv_ellipse_battery;
     ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
 
@@ -82,9 +84,12 @@ public class HomeActivityFragment extends Fragment {
         tv_lock_title=  (TextView) view.findViewById(R.id.tv_lock_title);
         tv_scan_ellipse=  (TextView) view.findViewById(R.id.tv_scan_ellipse);
         tv_ellipse_lock_unlock=  (TextView) view.findViewById(R.id.tv_ellipse_lock_unlock);
+        tv_ellipse_rssi=  (TextView) view.findViewById(R.id.tv_ellipse_rssi);
+        tv_ellipse_battery=  (TextView) view.findViewById(R.id.tv_ellipse_battery);
         et_connect_mac_address= (EditText) view.findViewById(R.id.et_lock_macaddress);
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
+
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
@@ -234,11 +239,14 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
                     }
 
                     @Override
                     public void onNext(Ellipse.Hardware.State state) {
+
+                        progressBar.setVisibility(View.GONE);
                         lockPosition = state.getPosition();
                         if(lockPosition== Ellipse.Hardware.Position.LOCKED){
                             tv_ellipse_lock_unlock.setText(getString(R.string.ellipse_unlock_label));
@@ -246,10 +254,40 @@ public class HomeActivityFragment extends Fragment {
                             tv_ellipse_lock_unlock.setText(getString(R.string.ellipse_lock_label));
                         }
 
+                        tv_ellipse_battery.setText("Battery: "+ setBatteryLevel(state.getBatteryLevel()) + " %");
+                        tv_ellipse_rssi.setText("Rssi Level: "+setRssiLevel(state.getRssiLevel())+" %");
+
                     }
                 });
     }
 
+
+    public int setRssiLevel(int level) {
+        if (level >= -50) {
+            return 100;
+        } else if (-50 >= level && level >= -70) {
+            return 75;
+        } else if (-70 >= level && level >= -90) {
+            return 50;
+        } else if (-90 >= level) {
+            return 25;
+        }
+        return 0;
+    }
+
+    public int setBatteryLevel(int level) {
+
+        if (level > 3175) {
+            return 100;
+        } else if (level > 3050) {
+            return 75;
+        } else if (level > 2925) {
+            return 50;
+        } else if (level > 2800) {
+            return 25;
+        }
+        return 0;
+    }
 
 
 
