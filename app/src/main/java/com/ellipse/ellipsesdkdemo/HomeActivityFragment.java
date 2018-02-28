@@ -23,7 +23,8 @@ import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
 import io.lattis.ellipse.sdk.model.Status;
-
+import io.lattis.ellipse.sdk.network.model.response.GetLatestFirmwareInfoResponse;
+import io.lattis.ellipse.sdk.network.model.response.GetLatestFirmwareLogResponse;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -54,6 +55,9 @@ public class HomeActivityFragment extends Fragment {
     TextView tv_scan_ellipse;
     TextView tv_ellipse_rssi;
     TextView tv_ellipse_battery;
+    TextView tv_ellipse_firmwarelogs;
+    TextView tv_ellipse_version;
+    TextView tv_ellipse_latest_version;
     ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
 
@@ -87,9 +91,13 @@ public class HomeActivityFragment extends Fragment {
         tv_ellipse_rssi=  (TextView) view.findViewById(R.id.tv_ellipse_rssi);
         tv_ellipse_battery=  (TextView) view.findViewById(R.id.tv_ellipse_battery);
         et_connect_mac_address= (EditText) view.findViewById(R.id.et_lock_macaddress);
+        tv_ellipse_firmwarelogs=  (TextView) view.findViewById(R.id.tv_ellipse_firmwarelogs);
+        tv_ellipse_version= (TextView) view.findViewById(R.id.tv_ellipse_version);
+        tv_ellipse_latest_version= (TextView) view.findViewById(R.id.tv_ellipse_latest_version);
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
+        et_token.setText("41601404d02cfd183f5fbf7bff1c36e4fbc95c0e235e9b86f1f3263d273a049f23d6ea32cc7b60fcdf1c1aafcfe0e094");
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
@@ -262,6 +270,96 @@ public class HomeActivityFragment extends Fragment {
     }
 
 
+
+    private void getFirmwareLog(){
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().getFirmwareLog()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<GetLatestFirmwareLogResponse>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(GetLatestFirmwareLogResponse getLatestFirmwareLogResponse) {
+                        progressBar.setVisibility(View.GONE);
+
+                        String[] logs = getLatestFirmwareLogResponse.getData();
+                        String info = "";
+                        if (logs != null) {
+                            for (String value : logs) {
+                                info = info + "-\t" + value + "\n";
+                            }
+                        }
+
+                        tv_ellipse_firmwarelogs.setText("Version ChangeLog: "+ info);
+
+                    }
+                });
+    }
+
+    private void getLatestFirmwareVersionInfo(){
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().getLatestFirmwareInfo()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<GetLatestFirmwareInfoResponse>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(GetLatestFirmwareInfoResponse getLatestFirmwareInfoResponse) {
+                        progressBar.setVisibility(View.GONE);
+                        String[] versions = getLatestFirmwareInfoResponse.getVersions();
+                        if(versions != null && versions.length > 0){
+                            String versionString = versions[versions.length -1];
+                            tv_ellipse_latest_version.setText(versionString);
+                        }
+                    }
+                });
+    }
+
+
+    private void getEllipseVersion(){
+        getEllipseManager().getFirmwareVersion(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Ellipse.Boot.Version>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(Ellipse.Boot.Version version) {
+                        tv_ellipse_version.setText("Current Version: "+version.getApplicationVersion()+"."+version.getApplicationRevision());
+                    }
+                });
+    }
+
+
     public int setRssiLevel(int level) {
         if (level >= -50) {
             return 100;
@@ -297,6 +395,9 @@ public class HomeActivityFragment extends Fragment {
         viewFlipper.setDisplayedChild(LAYOUT_LOCK_UNLOCK);
         tv_lock_title.setText("Lock connected: "+ lock.getMacId() );
         observeHardwareState();
+        getFirmwareLog();
+        getLatestFirmwareVersionInfo();
+        getEllipseVersion();
     }
 
     private void onLockDisconnected(){

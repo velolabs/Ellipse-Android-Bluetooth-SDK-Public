@@ -56,6 +56,41 @@
             android:textColor="@color/colorPrimaryDark"
             android:layout_marginTop="10dp"
             />
+
+        <TextView
+            android:id="@+id/tv_ellipse_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/tv_ellipse_rssi"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_marginTop="10dp"
+            />
+
+        <TextView
+            android:id="@+id/tv_ellipse_latest_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/tv_ellipse_version"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_marginTop="10dp"
+            />
+        <TextView
+            android:id="@+id/tv_ellipse_firmwarelogs"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_below="@+id/tv_ellipse_latest_version"
+            android:padding="5dp"
+            android:textSize="22dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:layout_marginTop="10dp"
+            />
     </RelativeLayout>
 
 </RelativeLayout>
