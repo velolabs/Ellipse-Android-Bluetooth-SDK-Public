@@ -97,7 +97,6 @@ public class HomeActivityFragment extends Fragment {
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
-        et_token.setText("41601404d02cfd183f5fbf7bff1c36e4fbc95c0e235e9b86f1f3263d273a049f23d6ea32cc7b60fcdf1c1aafcfe0e094");
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
