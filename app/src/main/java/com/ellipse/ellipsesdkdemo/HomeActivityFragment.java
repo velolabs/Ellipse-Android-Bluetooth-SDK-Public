@@ -1,6 +1,7 @@
 package com.ellipse.ellipsesdkdemo;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.widget.Toast;
 import android.widget.ViewFlipper;
 
 import io.lattis.ellipse.sdk.Ellipse;
+import io.lattis.ellipse.sdk.exception.BluetoothException;
 import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
@@ -50,6 +52,8 @@ public class HomeActivityFragment extends Fragment {
     EditText et_connect_mac_address;
     EditText et_token;
     ViewFlipper viewFlipper;
+    TextView tv_ellipse_touch_cap_off;
+    TextView tv_ellipse_touch_cap_on;
     TextView tv_ellipse_lock_unlock;
     TextView tv_lock_title;
     TextView tv_scan_ellipse;
@@ -60,6 +64,7 @@ public class HomeActivityFragment extends Fragment {
     TextView tv_ellipse_latest_version;
     ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
+    private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
 
 
     private Ellipse.Hardware.Position lockPosition;
@@ -86,6 +91,8 @@ public class HomeActivityFragment extends Fragment {
         viewFlipper = (ViewFlipper) view.findViewById(R.id.view_flipper);
         tv_connect_lock =  (TextView) view.findViewById(R.id.tv_connect_lock);
         tv_lock_title=  (TextView) view.findViewById(R.id.tv_lock_title);
+        tv_ellipse_touch_cap_off=  (TextView) view.findViewById(R.id.tv_ellipse_touch_cap_off);
+        tv_ellipse_touch_cap_on=  (TextView) view.findViewById(R.id.tv_ellipse_touch_cap_on);
         tv_scan_ellipse=  (TextView) view.findViewById(R.id.tv_scan_ellipse);
         tv_ellipse_lock_unlock=  (TextView) view.findViewById(R.id.tv_ellipse_lock_unlock);
         tv_ellipse_rssi=  (TextView) view.findViewById(R.id.tv_ellipse_rssi);
@@ -96,7 +103,6 @@ public class HomeActivityFragment extends Fragment {
         tv_ellipse_latest_version= (TextView) view.findViewById(R.id.tv_ellipse_latest_version);
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
-
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
@@ -110,6 +116,21 @@ public class HomeActivityFragment extends Fragment {
                     return;
                 }
                 connectToLock();
+            }
+        });
+
+
+        tv_ellipse_touch_cap_on.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setTouchCap(lock,true);
+            }
+        });
+
+        tv_ellipse_touch_cap_off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setTouchCap(lock,false);
             }
         });
 
@@ -147,6 +168,8 @@ public class HomeActivityFragment extends Fragment {
                     et_connect_mac_address.setText(data.getExtras().getString(ELLIPSE_MAC_ID));
                 }
             }
+        }else if(requestCode == REQUEST_CODE_ENABLE_BLUETOOTH && resultCode == RESULT_OK){
+            connectToLock();
         }
     }
 
@@ -195,16 +218,58 @@ public class HomeActivityFragment extends Fragment {
                     public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+
+                        if(e!=null && e instanceof BluetoothException){
+                            BluetoothException exception = (BluetoothException) e;
+                            if (exception != null) {
+                                if(exception.getStatus()!=null){
+                                    if(exception.getStatus() == BluetoothException.Status.BLUETOOTH_DISABLED){
+                                        startBluetooth();
+                                    } else if(exception.getStatus() == BluetoothException.Status.DEVICE_NOT_FOUND){
+//                                        connectToLock();    // in case if it is required to connect when Ellipse is in range
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     @Override
                     public void onNext(Status status) {
-
                         if(status.isAuthenticated()){
                             onLockConnected();
                         } else if(status == DISCONNECTED){
                             onLockDisconnected();
                         }
+                    }
+                });
+    }
+
+    private void startBluetooth(){
+        startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
+                REQUEST_CODE_ENABLE_BLUETOOTH);
+    }
+
+
+    public void setTouchCap(BluetoothLock lock, boolean active) {
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().setTouchCap(lock, active)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                        progressBar.setVisibility(View.GONE);
                     }
                 });
     }
@@ -397,6 +462,7 @@ public class HomeActivityFragment extends Fragment {
         getFirmwareLog();
         getLatestFirmwareVersionInfo();
         getEllipseVersion();
+        observeConnection();
     }
 
     private void onLockDisconnected(){
@@ -404,6 +470,30 @@ public class HomeActivityFragment extends Fragment {
         progressBar.setVisibility(View.GONE);
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
     }
+
+    public void observeConnection(){
+        getEllipseManager().observeLockState(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Status>() {
+
+                    @Override
+                    public void onNext(Status status) {
+                            // get status for connection
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+    }
+
 
 
 }
