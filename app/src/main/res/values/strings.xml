@@ -10,4 +10,8 @@
 
     <string name="ellipse_lock_label">Click to Lock</string>
     <string name="ellipse_unlock_label">Click to UnLock</string>
+
+    <string name="ellipse_touch_cap_off_label">Click to turn off touch cap</string>
+    <string name="ellipse_touch_cap_on_label">Click to turn on touch cap</string>
+
 </resources>
