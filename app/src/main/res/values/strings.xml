@@ -14,4 +14,10 @@
     <string name="ellipse_touch_cap_off_label">Click to turn off touch cap</string>
     <string name="ellipse_touch_cap_on_label">Click to turn on touch cap</string>
 
+    <string name="ellipse_auto_lock_on_shackle_off_label">Click to turn off magnetic auto Lock</string>
+    <string name="ellipse_auto_lock_on_shackle_on_label">Click to turn on magnetic auto Lock</string>
+
+    <string name="tv_disconnect_label">Click here to disconnect</string>
+    <string name="ellipse_disconnect_toast_label">Ellipse disconnected. Please try again!</string>
+
 </resources>

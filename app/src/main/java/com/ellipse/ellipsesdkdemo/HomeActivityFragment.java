@@ -25,9 +25,8 @@ import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
 import io.lattis.ellipse.sdk.model.Status;
-import io.lattis.ellipse.sdk.network.model.response.GetLatestFirmwareInfoResponse;
-import io.lattis.ellipse.sdk.network.model.response.GetLatestFirmwareLogResponse;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import permissions.dispatcher.NeedsPermission;
@@ -46,27 +45,28 @@ public class HomeActivityFragment extends Fragment {
     private String TAG = HomeActivityFragment.class.getSimpleName();
     private static final int LAYOUT_CONNECT = 0;
     private static final int LAYOUT_LOCK_UNLOCK = 1;
-    IEllipseManager ellipseManager=null;
-    BluetoothLock lock=null;
-    TextView tv_connect_lock;
-    EditText et_connect_mac_address;
-    EditText et_token;
-    ViewFlipper viewFlipper;
-    TextView tv_ellipse_touch_cap_off;
-    TextView tv_ellipse_touch_cap_on;
-    TextView tv_ellipse_lock_unlock;
-    TextView tv_lock_title;
-    TextView tv_scan_ellipse;
-    TextView tv_ellipse_rssi;
-    TextView tv_ellipse_battery;
-    TextView tv_ellipse_firmwarelogs;
-    TextView tv_ellipse_version;
-    TextView tv_ellipse_latest_version;
-    ProgressBar progressBar;
+    private IEllipseManager ellipseManager=null;
+    private BluetoothLock lock=null;
+    private TextView tv_connect_lock;
+    private EditText et_connect_mac_address;
+    private EditText et_token;
+    private ViewFlipper viewFlipper;
+    private TextView tv_ellipse_touch_cap_off;
+    private TextView tv_ellipse_touch_cap_on;
+    private TextView tv_ellipse_lock_unlock;
+    private TextView tv_lock_title;
+    private TextView tv_scan_ellipse;
+    private TextView tv_ellipse_rssi;
+    private TextView tv_ellipse_battery;
+    private TextView tv_ellipse_version;
+    private TextView tv_ellipse_auto_lock_on_shackle_on;
+    private TextView tv_ellipse_auto_lock_on_shackle_off;
+    private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
-
-
+    private Disposable hardwareStateDisposable;
+    private Disposable connectToDisposable;
+    private Disposable lockPositionDisposable;
     private Ellipse.Hardware.Position lockPosition;
 
     public HomeActivityFragment() {
@@ -93,14 +93,14 @@ public class HomeActivityFragment extends Fragment {
         tv_lock_title=  (TextView) view.findViewById(R.id.tv_lock_title);
         tv_ellipse_touch_cap_off=  (TextView) view.findViewById(R.id.tv_ellipse_touch_cap_off);
         tv_ellipse_touch_cap_on=  (TextView) view.findViewById(R.id.tv_ellipse_touch_cap_on);
+        tv_ellipse_auto_lock_on_shackle_on=  (TextView) view.findViewById(R.id.tv_ellipse_auto_lock_on_shackle_on);
+        tv_ellipse_auto_lock_on_shackle_off=  (TextView) view.findViewById(R.id.tv_ellipse_auto_lock_on_shackle_off);
         tv_scan_ellipse=  (TextView) view.findViewById(R.id.tv_scan_ellipse);
         tv_ellipse_lock_unlock=  (TextView) view.findViewById(R.id.tv_ellipse_lock_unlock);
         tv_ellipse_rssi=  (TextView) view.findViewById(R.id.tv_ellipse_rssi);
         tv_ellipse_battery=  (TextView) view.findViewById(R.id.tv_ellipse_battery);
         et_connect_mac_address= (EditText) view.findViewById(R.id.et_lock_macaddress);
-        tv_ellipse_firmwarelogs=  (TextView) view.findViewById(R.id.tv_ellipse_firmwarelogs);
         tv_ellipse_version= (TextView) view.findViewById(R.id.tv_ellipse_version);
-        tv_ellipse_latest_version= (TextView) view.findViewById(R.id.tv_ellipse_latest_version);
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
@@ -131,6 +131,21 @@ public class HomeActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 setTouchCap(lock,false);
+            }
+        });
+
+
+        tv_ellipse_auto_lock_on_shackle_on.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setAutoLockWithShackleInsert(lock,true);
+            }
+        });
+
+        tv_ellipse_auto_lock_on_shackle_off.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setAutoLockWithShackleInsert(lock,false);
             }
         });
 
@@ -205,7 +220,7 @@ public class HomeActivityFragment extends Fragment {
         progressBar.setVisibility(View.VISIBLE);
         lock = new BluetoothLock();
         lock.setMacId(et_connect_mac_address.getText().toString());
-        getEllipseManager().connect(et_token.getText().toString(),lock)
+        connectToDisposable = getEllipseManager().connect(et_token.getText().toString(),lock)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new DisposableObserver<Status>() {
@@ -217,7 +232,7 @@ public class HomeActivityFragment extends Fragment {
                     @Override
                     public void onError(Throwable e) {
                         progressBar.setVisibility(View.GONE);
-                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        Log.e(TAG, "Error occurred: " + e.getMessage());
 
                         if(e!=null && e instanceof BluetoothException){
                             BluetoothException exception = (BluetoothException) e;
@@ -275,6 +290,31 @@ public class HomeActivityFragment extends Fragment {
     }
 
 
+    public void setAutoLockWithShackleInsert(BluetoothLock lock, boolean active) {
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().setAutoLockWithShackleInsert(lock, active)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+
     public void setPosition(BluetoothLock lock, boolean locked) {
         progressBar.setVisibility(View.VISIBLE);
          getEllipseManager().setPosition(lock, locked)
@@ -300,10 +340,10 @@ public class HomeActivityFragment extends Fragment {
     }
 
     private void observeHardwareState(){
-        getEllipseManager(). observeHardwareState(lock)
+        hardwareStateDisposable = getEllipseManager().observeHardwareState(lock)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<Ellipse.Hardware.State>() {
+                .subscribeWith(new DisposableObserver<Ellipse.Hardware.State>() {
 
                     @Override
                     public void onComplete() {
@@ -324,6 +364,8 @@ public class HomeActivityFragment extends Fragment {
                             tv_ellipse_lock_unlock.setText(getString(R.string.ellipse_unlock_label));
                         }else if(lockPosition== Ellipse.Hardware.Position.UNLOCKED){
                             tv_ellipse_lock_unlock.setText(getString(R.string.ellipse_lock_label));
+                        }else {
+                            Log.e(TAG,"It looks like shackle jam ");
                         }
 
                         tv_ellipse_battery.setText("Battery: "+ setBatteryLevel(state.getBatteryLevel()) + " %");
@@ -334,13 +376,11 @@ public class HomeActivityFragment extends Fragment {
     }
 
 
-
-    private void getFirmwareLog(){
-        progressBar.setVisibility(View.VISIBLE);
-        getEllipseManager().getFirmwareLog()
+    private void observeLockPosition(){
+        lockPositionDisposable = getEllipseManager().observeLockPosition(lock)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<GetLatestFirmwareLogResponse>() {
+                .subscribeWith(new DisposableObserver<Ellipse.Hardware.Position>() {
 
                     @Override
                     public void onComplete() {
@@ -348,56 +388,24 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onError(Throwable e) {
-                        progressBar.setVisibility(View.GONE);
                         Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
                     }
 
                     @Override
-                    public void onNext(GetLatestFirmwareLogResponse getLatestFirmwareLogResponse) {
-                        progressBar.setVisibility(View.GONE);
+                    public void onNext(Ellipse.Hardware.Position position) {
+                        if(position== Ellipse.Hardware.Position.LOCKED){
 
-                        String[] logs = getLatestFirmwareLogResponse.getData();
-                        String info = "";
-                        if (logs != null) {
-                            for (String value : logs) {
-                                info = info + "-\t" + value + "\n";
-                            }
+                        }else if(position== Ellipse.Hardware.Position.UNLOCKED){
+
+                        }else {
+                            Log.e(TAG,"It looks like shackle jam ");
                         }
-
-                        tv_ellipse_firmwarelogs.setText("Version ChangeLog: "+ info);
 
                     }
                 });
     }
 
-    private void getLatestFirmwareVersionInfo(){
-        progressBar.setVisibility(View.VISIBLE);
-        getEllipseManager().getLatestFirmwareInfo()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<GetLatestFirmwareInfoResponse>() {
 
-                    @Override
-                    public void onComplete() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        progressBar.setVisibility(View.GONE);
-                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
-                    }
-
-                    @Override
-                    public void onNext(GetLatestFirmwareInfoResponse getLatestFirmwareInfoResponse) {
-                        progressBar.setVisibility(View.GONE);
-                        String[] versions = getLatestFirmwareInfoResponse.getVersions();
-                        if(versions != null && versions.length > 0){
-                            String versionString = versions[versions.length -1];
-                            tv_ellipse_latest_version.setText(versionString);
-                        }
-                    }
-                });
-    }
 
 
     private void getEllipseVersion(){
@@ -418,7 +426,7 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onNext(Ellipse.Boot.Version version) {
-                        tv_ellipse_version.setText("Current Version: "+version.getApplicationVersion()+"."+version.getApplicationRevision());
+                        tv_ellipse_version.setText("Current FW Version: "+version.getApplicationVersion()+"."+version.getApplicationRevision());
                     }
                 });
     }
@@ -459,15 +467,15 @@ public class HomeActivityFragment extends Fragment {
         viewFlipper.setDisplayedChild(LAYOUT_LOCK_UNLOCK);
         tv_lock_title.setText("Lock connected: "+ lock.getMacId() );
         observeHardwareState();
-        getFirmwareLog();
-        getLatestFirmwareVersionInfo();
+        observeLockPosition();
         getEllipseVersion();
         observeConnection();
     }
 
     private void onLockDisconnected(){
-        Toast.makeText(getActivity(),"Ellipse disconnected. Please try again!",Toast.LENGTH_LONG).show();
+        Toast.makeText(getActivity(),getString(R.string.ellipse_disconnect_toast_label),Toast.LENGTH_LONG).show();
         progressBar.setVisibility(View.GONE);
+        disposeAllDisposable();
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
     }
 
@@ -496,4 +504,25 @@ public class HomeActivityFragment extends Fragment {
 
 
 
+    @Override
+    public void onStop() {
+        getEllipseManager().disconnectAllLocks();
+        disposeAllDisposable();
+        super.onStop();
+    }
+
+
+    private void disposeAllDisposable(){
+        if(hardwareStateDisposable!=null && !hardwareStateDisposable.isDisposed()){
+            hardwareStateDisposable.dispose();
+        }
+
+        if(connectToDisposable!=null && !connectToDisposable.isDisposed()){
+            connectToDisposable.dispose();
+        }
+
+        if(lockPositionDisposable!=null && !lockPositionDisposable.isDisposed()){
+            lockPositionDisposable.dispose();
+        }
+    }
 }
