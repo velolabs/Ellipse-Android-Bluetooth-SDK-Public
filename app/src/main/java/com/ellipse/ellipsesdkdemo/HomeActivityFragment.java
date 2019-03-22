@@ -106,10 +106,6 @@ public class HomeActivityFragment extends Fragment {
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
-
-        et_token.setText("2b0487a10bd4021bc83f47a0061b00892b9cd0b137edbc4ac0abc183e7dc8f7a");
-        et_connect_mac_address.setText("DB2959DF8354");
-
         tv_connect_lock.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
