@@ -8,7 +8,7 @@ import io.lattis.ellipse.sdk.model.BluetoothLock;
 
 public class ScanEllipseActivity extends AppCompatActivity  implements ScanEllipseFragment.OnListFragmentInteractionListener {
 
-    public static String ELLIPSE_MAC_ID = "ELLIPSE_MAC_ID";
+    public static String ELLIPSE_NAME = "ELLIPSE_NAME";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -20,7 +20,7 @@ public class ScanEllipseActivity extends AppCompatActivity  implements ScanEllip
     @Override
     public void onListFragmentInteraction(BluetoothLock item) {
         Intent intent = new Intent();
-        intent.putExtra(ELLIPSE_MAC_ID,item.getMacId());
+        intent.putExtra(ELLIPSE_NAME,item.getName());
         setResult(RESULT_OK,intent);
         finish();
     }

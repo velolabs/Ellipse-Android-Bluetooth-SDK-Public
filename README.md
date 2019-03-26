@@ -9,9 +9,9 @@
 Please enter the authorization token provided by Lattis.
 
 
-## Ellipse Mac Address: 
+## Ellipse name or mac id: 
 
-If Ellipse's mac address is known, please enter here. If you dont know, please click on 'Scan Ellipse(s)' button to start scanning the Ellipse(s). Once app show Ellipse(s), click on it to use it further for connection.
+If Ellipse's name (it will be Ellipse-XXXXX or Ellipse XXXXX) is known, please enter here. If you dont know, please click on 'Scan Ellipse(s)' button to start scanning the Ellipse(s). Once app show Ellipse(s), click on it to use it further for connection.
 
 
 Once Ellipse is selected, click 'Connect Lock' to connect it.

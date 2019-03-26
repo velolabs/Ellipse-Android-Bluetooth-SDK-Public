@@ -25,6 +25,7 @@ import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
 import io.lattis.ellipse.sdk.model.Status;
+import io.lattis.ellipse.sdk.util.BluetoothUtil;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
@@ -33,7 +34,7 @@ import permissions.dispatcher.NeedsPermission;
 import permissions.dispatcher.RuntimePermissions;
 
 import static android.app.Activity.RESULT_OK;
-import static com.ellipse.ellipsesdkdemo.ScanEllipseActivity.ELLIPSE_MAC_ID;
+import static com.ellipse.ellipsesdkdemo.ScanEllipseActivity.ELLIPSE_NAME;
 import static io.lattis.ellipse.sdk.model.Status.DISCONNECTED;
 
 /**
@@ -48,7 +49,7 @@ public class HomeActivityFragment extends Fragment {
     private IEllipseManager ellipseManager=null;
     private BluetoothLock lock=null;
     private TextView tv_connect_lock;
-    private EditText et_connect_mac_address;
+    private EditText et_ellipse_name_or_mac_id;
     private EditText et_token;
     private ViewFlipper viewFlipper;
     private TextView tv_ellipse_touch_cap_off;
@@ -99,7 +100,7 @@ public class HomeActivityFragment extends Fragment {
         tv_ellipse_lock_unlock=  (TextView) view.findViewById(R.id.tv_ellipse_lock_unlock);
         tv_ellipse_rssi=  (TextView) view.findViewById(R.id.tv_ellipse_rssi);
         tv_ellipse_battery=  (TextView) view.findViewById(R.id.tv_ellipse_battery);
-        et_connect_mac_address= (EditText) view.findViewById(R.id.et_lock_macaddress);
+        et_ellipse_name_or_mac_id= (EditText) view.findViewById(R.id.et_ellipse_name);
         tv_ellipse_version= (TextView) view.findViewById(R.id.tv_ellipse_version);
         et_token= (EditText) view.findViewById(R.id.et_token);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
@@ -111,8 +112,8 @@ public class HomeActivityFragment extends Fragment {
             public void onClick(View v) {
 
                 if(et_token.getText()==null || et_token.getText().toString()==null || et_token.getText().toString().isEmpty()
-                || et_connect_mac_address.getText()==null || et_connect_mac_address.getText().toString()==null  || et_connect_mac_address.getText().toString().isEmpty()){
-                    Toast.makeText(getActivity(),"Please enter token and Ellipse's mac address",Toast.LENGTH_LONG).show();
+                || et_ellipse_name_or_mac_id.getText()==null || et_ellipse_name_or_mac_id.getText().toString()==null  || et_ellipse_name_or_mac_id.getText().toString().isEmpty()){
+                    Toast.makeText(getActivity(),"Please enter token and Ellipse's name or mac id",Toast.LENGTH_LONG).show();
                     return;
                 }
                 connectToLock();
@@ -179,8 +180,8 @@ public class HomeActivityFragment extends Fragment {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_CODE_SCAN_ACTIVITY && resultCode == RESULT_OK){
             if(data!=null) {
-                if (data.hasExtra(ELLIPSE_MAC_ID)) {
-                    et_connect_mac_address.setText(data.getExtras().getString(ELLIPSE_MAC_ID));
+                if (data.hasExtra(ELLIPSE_NAME)) {
+                    et_ellipse_name_or_mac_id.setText(data.getExtras().getString(ELLIPSE_NAME));
                 }
             }
         }else if(requestCode == REQUEST_CODE_ENABLE_BLUETOOTH && resultCode == RESULT_OK){
@@ -213,13 +214,14 @@ public class HomeActivityFragment extends Fragment {
 
 
 
-
-
-
     private void connectToLock(){
         progressBar.setVisibility(View.VISIBLE);
         lock = new BluetoothLock();
-        lock.setMacId(et_connect_mac_address.getText().toString());
+        if(et_ellipse_name_or_mac_id.getText().toString().contains(" ") || et_ellipse_name_or_mac_id.getText().toString().contains("-")){
+            lock.setMacId(BluetoothUtil.getMacIdFromName(et_ellipse_name_or_mac_id.getText().toString()));
+        }else{
+            lock.setMacId(et_ellipse_name_or_mac_id.getText().toString());
+        }
         connectToDisposable = getEllipseManager().connect(et_token.getText().toString(),lock)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -250,6 +252,7 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onNext(Status status) {
+                        Log.e(TAG,"Status: "+status);
                         if(status.isAuthenticated()){
                             onLockConnected();
                         } else if(status == DISCONNECTED){
@@ -501,7 +504,6 @@ public class HomeActivityFragment extends Fragment {
                     }
                 });
     }
-
 
 
     @Override
