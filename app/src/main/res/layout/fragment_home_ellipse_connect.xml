@@ -20,7 +20,7 @@
             />
 
         <EditText
-            android:id="@+id/et_lock_macaddress"
+            android:id="@+id/et_ellipse_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
@@ -28,7 +28,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_below="@+id/et_token"
-            android:hint="@string/hint_lock_mac_address_label"
+            android:hint="@string/hint_lock_name"
             />
 
         <TextView
@@ -39,7 +39,7 @@
             android:layout_centerInParent="true"
             android:padding="16dp"
             android:textColor="@color/colorPrimaryDark"
-            android:layout_below="@+id/et_lock_macaddress"
+            android:layout_below="@+id/et_ellipse_name"
             android:layout_marginTop="20dp"
             android:text="@string/connect_lock_label"
             />
