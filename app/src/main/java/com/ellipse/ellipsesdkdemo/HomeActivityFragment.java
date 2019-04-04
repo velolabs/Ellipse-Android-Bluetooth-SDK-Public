@@ -450,32 +450,7 @@ public class HomeActivityFragment extends Fragment {
                     }
                 });
     }
-
-
-    public void disconnect() {
-        progressBar.setVisibility(View.VISIBLE);
-        getEllipseManager().disconnect(lock)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<Boolean>() {
-
-                    @Override
-                    public void onComplete() {
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
-                        progressBar.setVisibility(View.GONE);
-                    }
-
-                    @Override
-                    public void onNext(Boolean status) {
-                        progressBar.setVisibility(View.GONE);
-                    }
-                });
-    }
-
+    
 
 
     private void getEllipseVersion(){
