@@ -62,6 +62,8 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_ellipse_version;
     private TextView tv_ellipse_auto_lock_on_shackle_on;
     private TextView tv_ellipse_auto_lock_on_shackle_off;
+    private TextView tv_turn_off_auto_lock;
+    private TextView tv_turn_on_auto_lock;
     private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
@@ -103,6 +105,8 @@ public class HomeActivityFragment extends Fragment {
         et_ellipse_name_or_mac_id= (EditText) view.findViewById(R.id.et_ellipse_name);
         tv_ellipse_version= (TextView) view.findViewById(R.id.tv_ellipse_version);
         et_token= (EditText) view.findViewById(R.id.et_token);
+        tv_turn_on_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_on_auto_lock);
+        tv_turn_off_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_off_auto_lock);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
@@ -169,6 +173,20 @@ public class HomeActivityFragment extends Fragment {
             public void onClick(View v) {
                 Intent intent=new Intent(getActivity(),ScanEllipseActivity.class);
                 startActivityForResult(intent,REQUEST_CODE_SCAN_ACTIVITY);
+            }
+        });
+
+        tv_turn_on_auto_lock.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setAutoLock(true);
+            }
+        });
+
+        tv_turn_off_auto_lock.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setAutoLock(false);
             }
         });
 
@@ -409,6 +427,30 @@ public class HomeActivityFragment extends Fragment {
     }
 
 
+    public void setAutoLock(boolean active) {
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().setAutoLock(lock,active)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+    
 
 
     private void getEllipseVersion(){

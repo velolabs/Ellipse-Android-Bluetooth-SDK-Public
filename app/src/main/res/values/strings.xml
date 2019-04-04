@@ -18,6 +18,10 @@
     <string name="ellipse_auto_lock_on_shackle_on_label">Click to turn on magnetic auto Lock</string>
 
     <string name="tv_disconnect_label">Click here to disconnect</string>
+
+    <string name="tv_set_auto_lock_on_label">Click to turn on auto lock</string>
+    <string name="tv_set_auto_lock_off_label">Click to turn off auto lock</string>
+
     <string name="ellipse_disconnect_toast_label">Ellipse disconnected. Please try again!</string>
 
 </resources>
