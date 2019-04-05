@@ -24,4 +24,6 @@
 
     <string name="ellipse_disconnect_toast_label">Ellipse disconnected. Please try again!</string>
 
+    <string name="shackle_position_label">Shackle inserted: </string>
+
 </resources>

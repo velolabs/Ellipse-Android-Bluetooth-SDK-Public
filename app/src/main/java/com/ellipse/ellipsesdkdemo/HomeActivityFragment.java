@@ -64,12 +64,14 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_ellipse_auto_lock_on_shackle_off;
     private TextView tv_turn_off_auto_lock;
     private TextView tv_turn_on_auto_lock;
+    private TextView tv_shacke_position;
     private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
     private Disposable hardwareStateDisposable;
     private Disposable connectToDisposable;
     private Disposable lockPositionDisposable;
+    private Disposable shackleDisposable;
     private Ellipse.Hardware.Position lockPosition;
 
     public HomeActivityFragment() {
@@ -107,6 +109,7 @@ public class HomeActivityFragment extends Fragment {
         et_token= (EditText) view.findViewById(R.id.et_token);
         tv_turn_on_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_on_auto_lock);
         tv_turn_off_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_off_auto_lock);
+        tv_shacke_position=  (TextView) view.findViewById(R.id.tv_shacke_position);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
@@ -392,6 +395,31 @@ public class HomeActivityFragment extends Fragment {
                         tv_ellipse_battery.setText("Battery: "+ setBatteryLevel(state.getBatteryLevel()) + " %");
                         tv_ellipse_rssi.setText("Rssi Level: "+setRssiLevel(state.getRssiLevel())+" %");
 
+                        tv_shacke_position.setText(getString(R.string.shackle_position_label)+ " "+state.isShackleInserted());
+
+                    }
+                });
+    }
+
+
+    private void observeShacklePosition(){
+        shackleDisposable = getEllipseManager().observeShacklePosition(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<Ellipse.Hardware.State.ShackePosition>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(Ellipse.Hardware.State.ShackePosition shackePosition) {
+                        tv_shacke_position.setText(getString(R.string.shackle_position_label)+ " "+shackePosition.isShackleInserted());
                     }
                 });
     }
@@ -450,7 +478,7 @@ public class HomeActivityFragment extends Fragment {
                     }
                 });
     }
-    
+
 
 
     private void getEllipseVersion(){
@@ -513,6 +541,7 @@ public class HomeActivityFragment extends Fragment {
         tv_lock_title.setText("Lock connected: "+ lock.getMacId() );
         observeHardwareState();
         observeLockPosition();
+        observeShacklePosition();
         getEllipseVersion();
         observeConnection();
     }
@@ -567,6 +596,10 @@ public class HomeActivityFragment extends Fragment {
 
         if(lockPositionDisposable!=null && !lockPositionDisposable.isDisposed()){
             lockPositionDisposable.dispose();
+        }
+
+        if(shackleDisposable!=null && !shackleDisposable.isDisposed()){
+            shackleDisposable.dispose();
         }
     }
 }
