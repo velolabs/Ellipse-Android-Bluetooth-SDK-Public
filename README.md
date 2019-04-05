@@ -152,3 +152,39 @@ Ellipse SDK can be found at Ellipse-Android-Bluetooth-SDK/Ellipse-Android-Blueto
 
 In order to build the application, please see the app's build.gradle to include necessary dependencies like rxbinding2, retrofit2, okhttp3 & rxjava2. Please see the build.gradle of this project.
 
+
+In order to observe for shackle insertion
+
+```
+private void observeShacklePosition(){
+        shackleDisposable = getEllipseManager().observeShacklePosition(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<Ellipse.Hardware.State.ShackePosition>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(Ellipse.Hardware.State.ShackePosition shackePosition) {
+                        tv_shacke_position.setText(getString(R.string.shackle_position_label)+ " "+shackePosition.isShackleInserted());
+                    }
+                });
+    }
+
+```
+
+
+
+
+
+
+ 
+
+
