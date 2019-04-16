@@ -180,9 +180,11 @@ private void observeShacklePosition(){
 
 ```
 
+
+
 In order to enable / disable magnet auto lock, use following function:
 
-'''
+```
 public void setMagnetAutoLock(BluetoothLock lock, boolean active) {
         progressBar.setVisibility(View.VISIBLE);
         getEllipseManager().setAutoLockWithShackleInsert(lock, active)
@@ -207,7 +209,7 @@ public void setMagnetAutoLock(BluetoothLock lock, boolean active) {
                 });
     }
 
-'''
+```
 
 
 
