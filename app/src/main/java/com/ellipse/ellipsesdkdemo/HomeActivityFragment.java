@@ -146,14 +146,14 @@ public class HomeActivityFragment extends Fragment {
         tv_ellipse_auto_lock_on_shackle_on.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setAutoLockWithShackleInsert(lock,true);
+                setMagnetAutoLock(lock,true);
             }
         });
 
         tv_ellipse_auto_lock_on_shackle_off.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setAutoLockWithShackleInsert(lock,false);
+                setMagnetAutoLock(lock,false);
             }
         });
 
@@ -314,7 +314,7 @@ public class HomeActivityFragment extends Fragment {
     }
 
 
-    public void setAutoLockWithShackleInsert(BluetoothLock lock, boolean active) {
+    public void setMagnetAutoLock(BluetoothLock lock, boolean active) {
         progressBar.setVisibility(View.VISIBLE);
         getEllipseManager().setAutoLockWithShackleInsert(lock, active)
                 .subscribeOn(Schedulers.io())
