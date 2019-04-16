@@ -180,8 +180,34 @@ private void observeShacklePosition(){
 
 ```
 
+In order to enable / disable magnet auto lock, use following function:
 
+'''
+public void setMagnetAutoLock(BluetoothLock lock, boolean active) {
+        progressBar.setVisibility(View.VISIBLE);
+        getEllipseManager().setAutoLockWithShackleInsert(lock, active)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
 
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+'''
 
 
 
