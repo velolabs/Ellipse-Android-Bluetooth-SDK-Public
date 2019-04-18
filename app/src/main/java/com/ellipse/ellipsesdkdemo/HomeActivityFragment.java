@@ -65,6 +65,7 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_turn_off_auto_lock;
     private TextView tv_turn_on_auto_lock;
     private TextView tv_shacke_position;
+    private TextView tv_disconnect;
     private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
@@ -73,6 +74,7 @@ public class HomeActivityFragment extends Fragment {
     private Disposable lockPositionDisposable;
     private Disposable shackleDisposable;
     private Ellipse.Hardware.Position lockPosition;
+    private boolean isReconnectionRequired=false;
 
     public HomeActivityFragment() {
     }
@@ -110,6 +112,7 @@ public class HomeActivityFragment extends Fragment {
         tv_turn_on_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_on_auto_lock);
         tv_turn_off_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_off_auto_lock);
         tv_shacke_position=  (TextView) view.findViewById(R.id.tv_shacke_position);
+        tv_disconnect=  (TextView) view.findViewById(R.id.tv_disconnect);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
@@ -123,7 +126,7 @@ public class HomeActivityFragment extends Fragment {
                     Toast.makeText(getActivity(),"Please enter token and Ellipse's name or mac id",Toast.LENGTH_LONG).show();
                     return;
                 }
-                connectToLock();
+                disconnectAndConnectIfRequired(true);
             }
         });
 
@@ -190,6 +193,13 @@ public class HomeActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 setAutoLock(false);
+            }
+        });
+
+        tv_disconnect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                disconnectAndConnectIfRequired(false);
             }
         });
 
@@ -264,7 +274,7 @@ public class HomeActivityFragment extends Fragment {
                                     if(exception.getStatus() == BluetoothException.Status.BLUETOOTH_DISABLED){
                                         startBluetooth();
                                     } else if(exception.getStatus() == BluetoothException.Status.DEVICE_NOT_FOUND){
-//                                        connectToLock();    // in case if it is required to connect when Ellipse is in range
+                                        connectToLock();    // in case if it is required to connect when Ellipse is in range
                                     }
                                 }
                             }
@@ -278,6 +288,7 @@ public class HomeActivityFragment extends Fragment {
                             onLockConnected();
                         } else if(status == DISCONNECTED){
                             onLockDisconnected();
+                            disconnectAndConnectIfRequired(isReconnectionRequired);
                         }
                     }
                 });
@@ -579,8 +590,8 @@ public class HomeActivityFragment extends Fragment {
 
     @Override
     public void onStop() {
-        getEllipseManager().disconnectAllLocks();
         disposeAllDisposable();
+        isReconnectionRequired=false;
         super.onStop();
     }
 
@@ -601,5 +612,37 @@ public class HomeActivityFragment extends Fragment {
         if(shackleDisposable!=null && !shackleDisposable.isDisposed()){
             shackleDisposable.dispose();
         }
+    }
+
+    public void disconnectAndConnectIfRequired(boolean reconnectionRequired) {
+        isReconnectionRequired = reconnectionRequired;
+        getEllipseManager().disconnectAllLocks()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onNext(Boolean bool) {
+                        if(reconnectionRequired){
+                            connectToLock();
+                        }else{
+                            onLockDisconnected();
+                        }
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        if(reconnectionRequired){
+                            connectToLock();
+                        }else{
+                            onLockDisconnected();
+                        }
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 }
