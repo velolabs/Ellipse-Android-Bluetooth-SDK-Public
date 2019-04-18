@@ -26,4 +26,6 @@
 
     <string name="shackle_position_label">Shackle inserted: </string>
 
+    <string name="disconnecte_label">Disconnect</string>
+
 </resources>
