@@ -26,6 +26,8 @@
 
     <string name="shackle_position_label">Shackle inserted: </string>
 
+    <string name="set_pin_label"> Set Pin to UP, DOWN, RIGHT, LEFT </string>
+
     <string name="disconnecte_label">Disconnect</string>
 
 </resources>

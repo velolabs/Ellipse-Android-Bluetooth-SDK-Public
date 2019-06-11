@@ -158,10 +158,22 @@
             android:textSize="22dp" />
 
         <TextView
-            android:id="@+id/tv_disconnect"
+            android:id="@+id/tv_pin_change"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/tv_shacke_position"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:padding="5dp"
+            android:text="@string/set_pin_label"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="22dp" />
+
+        <TextView
+            android:id="@+id/tv_disconnect"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_pin_change"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:padding="5dp"
