@@ -24,6 +24,7 @@ import io.lattis.ellipse.sdk.exception.BluetoothException;
 import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
+import io.lattis.ellipse.sdk.model.PinCode;
 import io.lattis.ellipse.sdk.model.Status;
 import io.lattis.ellipse.sdk.util.BluetoothUtil;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -65,6 +66,7 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_turn_off_auto_lock;
     private TextView tv_turn_on_auto_lock;
     private TextView tv_shacke_position;
+    private TextView tv_pin_change;
     private TextView tv_disconnect;
     private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
@@ -112,6 +114,7 @@ public class HomeActivityFragment extends Fragment {
         tv_turn_on_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_on_auto_lock);
         tv_turn_off_auto_lock=  (TextView) view.findViewById(R.id.tv_turn_off_auto_lock);
         tv_shacke_position=  (TextView) view.findViewById(R.id.tv_shacke_position);
+        tv_pin_change = (TextView) view.findViewById(R.id.tv_pin_change);
         tv_disconnect=  (TextView) view.findViewById(R.id.tv_disconnect);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
@@ -193,6 +196,13 @@ public class HomeActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 setAutoLock(false);
+            }
+        });
+
+        tv_pin_change.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setPin();
             }
         });
 
@@ -353,6 +363,37 @@ public class HomeActivityFragment extends Fragment {
     public void setPosition(BluetoothLock lock, boolean locked) {
         progressBar.setVisibility(View.VISIBLE);
          getEllipseManager().setPosition(lock, locked)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                        progressBar.setVisibility(View.GONE);
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                        progressBar.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    private void setPin(){
+        progressBar.setVisibility(View.VISIBLE);
+
+        PinCode pinCode = new PinCode();
+        pinCode.addPin(PinCode.Pin.UP);
+        pinCode.addPin(PinCode.Pin.DOWN);
+        pinCode.addPin(PinCode.Pin.RIGHT);
+        pinCode.addPin(PinCode.Pin.LEFT);
+
+        getEllipseManager().setPinCode(lock, pinCode)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(new DisposableObserver<Boolean>() {
