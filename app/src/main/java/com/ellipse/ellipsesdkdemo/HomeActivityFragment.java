@@ -5,10 +5,10 @@ import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.Fragment;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -68,6 +68,7 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_shacke_position;
     private TextView tv_pin_change;
     private TextView tv_disconnect;
+    private TextView tv_reset;
     private ProgressBar progressBar;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
@@ -116,6 +117,7 @@ public class HomeActivityFragment extends Fragment {
         tv_shacke_position=  (TextView) view.findViewById(R.id.tv_shacke_position);
         tv_pin_change = (TextView) view.findViewById(R.id.tv_pin_change);
         tv_disconnect=  (TextView) view.findViewById(R.id.tv_disconnect);
+        tv_reset=  (TextView) view.findViewById(R.id.tv_reset);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
@@ -210,6 +212,13 @@ public class HomeActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 disconnectAndConnectIfRequired(false);
+            }
+        });
+
+        tv_reset.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                resetEllipse();
             }
         });
 
@@ -623,6 +632,30 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onComplete() {
+
+                    }
+                });
+    }
+
+    private void resetEllipse(){
+        isReconnectionRequired=false;
+        getEllipseManager().reset(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
 
                     }
                 });

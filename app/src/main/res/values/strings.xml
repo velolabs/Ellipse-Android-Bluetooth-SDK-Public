@@ -30,4 +30,6 @@
 
     <string name="disconnecte_label">Disconnect</string>
 
+    <string name="reset_label">Reset</string>
+
 </resources>
