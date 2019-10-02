@@ -8,10 +8,13 @@
     xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentStart="true"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true">
 
         <TextView
@@ -28,7 +31,6 @@
             android:id="@+id/tv_turn_on_auto_lock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_lock_title"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:padding="5dp"
@@ -41,7 +43,6 @@
             android:id="@+id/tv_turn_off_auto_lock"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_turn_on_auto_lock"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:padding="5dp"
@@ -145,11 +146,59 @@
             android:textSize="22dp" />
 
 
+
+        <TextView
+            android:id="@+id/tv_latest_fw_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tv_ellipse_version"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:padding="5dp"
+            android:textColor="@color/colorPrimaryDark"
+            android:textSize="22dp" />
+
+
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/ll_upgrade"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:layout_below="@+id/tv_latest_fw_available">
+
+        <ProgressBar
+            android:id="@+id/pb_fw_upgrade"
+            android:layout_marginTop="10dp"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_weight="2"
+            android:layout_height="15dp"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:indeterminate="false"
+            android:max="100"
+            android:minWidth="200dp"
+            android:progress="1"
+            android:progressDrawable="@drawable/update_progressbar_horizontal" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/upgrade_fw_label"
+            android:id="@+id/btn_upgrade"/>
+
+        </LinearLayout>
+
+
         <TextView
             android:id="@+id/tv_shacke_position"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/tv_ellipse_version"
+            android:layout_below="@+id/rl_upgrade"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:padding="5dp"
@@ -194,7 +243,7 @@
             android:textSize="22dp" />
 
 
-    </RelativeLayout>
+    </LinearLayout>
 
 </RelativeLayout>
 </ScrollView>
