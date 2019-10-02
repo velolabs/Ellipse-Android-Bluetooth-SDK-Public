@@ -13,7 +13,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -24,6 +26,7 @@ import io.lattis.ellipse.sdk.exception.BluetoothException;
 import io.lattis.ellipse.sdk.manager.EllipseManager;
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
+import io.lattis.ellipse.sdk.model.FirmwareUpdateProgress;
 import io.lattis.ellipse.sdk.model.PinCode;
 import io.lattis.ellipse.sdk.model.Status;
 import io.lattis.ellipse.sdk.util.BluetoothUtil;
@@ -69,7 +72,13 @@ public class HomeActivityFragment extends Fragment {
     private TextView tv_pin_change;
     private TextView tv_disconnect;
     private TextView tv_reset;
+    private TextView tv_latest_fw_available;
     private ProgressBar progressBar;
+    private ProgressBar pb_fw_upgrade;
+    private Button btn_upgrade;
+    private LinearLayout ll_upgrade;
+    private Ellipse.Boot.Version ellipseVersion;
+    private Ellipse.Boot.Version latestAvailableVersion;
     private static final int REQUEST_CODE_SCAN_ACTIVITY = 101;
     private static final int REQUEST_CODE_ENABLE_BLUETOOTH = 102;
     private Disposable hardwareStateDisposable;
@@ -118,7 +127,11 @@ public class HomeActivityFragment extends Fragment {
         tv_pin_change = (TextView) view.findViewById(R.id.tv_pin_change);
         tv_disconnect=  (TextView) view.findViewById(R.id.tv_disconnect);
         tv_reset=  (TextView) view.findViewById(R.id.tv_reset);
+        tv_latest_fw_available=  (TextView) view.findViewById(R.id.tv_latest_fw_available);
         progressBar = (ProgressBar) view.findViewById(R.id.progress_bar);
+        pb_fw_upgrade = (ProgressBar) view.findViewById(R.id.pb_fw_upgrade);
+        btn_upgrade = (Button) view.findViewById(R.id.btn_upgrade);
+        ll_upgrade = (LinearLayout) view.findViewById(R.id.ll_upgrade);
 
         viewFlipper.setDisplayedChild(LAYOUT_CONNECT);
 
@@ -219,6 +232,13 @@ public class HomeActivityFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 resetEllipse();
+            }
+        });
+
+        btn_upgrade.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                updateFirmware();
             }
         });
 
@@ -560,7 +580,80 @@ public class HomeActivityFragment extends Fragment {
 
                     @Override
                     public void onNext(Ellipse.Boot.Version version) {
+                        getLatestAvailableFirmwareVersion();
+                        ellipseVersion = version;
                         tv_ellipse_version.setText("Current FW Version: "+version.getApplicationVersion()+"."+version.getApplicationRevision());
+                    }
+                });
+    }
+
+    private void getLatestAvailableFirmwareVersion(){
+        getEllipseManager().getLatestAvailableFirmwareVersion()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Ellipse.Boot.Version>() {
+
+                    @Override
+                    public void onComplete() {
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        progressBar.setVisibility(View.GONE);
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(Ellipse.Boot.Version version) {
+                        latestAvailableVersion = version;
+                        if(latestAvailableVersion.getApplicationVersion()>ellipseVersion.getApplicationVersion()){
+                            ll_upgrade.setVisibility(View.VISIBLE);
+                            pb_fw_upgrade.setProgress(0);
+                        }else if(latestAvailableVersion.getApplicationVersion() == ellipseVersion.getApplicationVersion() &&
+                            latestAvailableVersion.getApplicationRevision()> ellipseVersion.getApplicationRevision()){
+                            ll_upgrade.setVisibility(View.VISIBLE);
+                            pb_fw_upgrade.setProgress(0);
+                        }
+                        tv_latest_fw_available.setText("Latest FW available: "+version.getApplicationVersion()+"."+version.getApplicationRevision());
+                    }
+                });
+    }
+
+
+    private void updateFirmware(){
+        btn_upgrade.setEnabled(false);
+        getEllipseManager().updateFirmware(lock)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<FirmwareUpdateProgress>() {
+
+                    @Override
+                    public void onComplete() {
+                        btn_upgrade.setEnabled(true);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        btn_upgrade.setEnabled(true);
+                        pb_fw_upgrade.setProgress(0);
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(getActivity(),getString(R.string.upgrade_fw_failure_label),Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Error occurred: " + e.getLocalizedMessage());
+                    }
+
+                    @Override
+                    public void onNext(FirmwareUpdateProgress progress) {
+                        if(progress.getStatus().equals(FirmwareUpdateProgress.Status.IN_PROGRESS)){
+                            pb_fw_upgrade.setMax(progress.getTotal());
+                            pb_fw_upgrade.setProgress(progress.getProgress());
+                        } else if(progress.getStatus().equals(FirmwareUpdateProgress.Status.IMAGE_INVALID)) {
+                            Toast.makeText(getActivity(),getString(R.string.upgrade_fw_failure_label),Toast.LENGTH_LONG).show();
+                            btn_upgrade.setEnabled(true);
+                            pb_fw_upgrade.setProgress(0);
+                        } else if(progress.getStatus().equals(FirmwareUpdateProgress.Status.IMAGE_VALID)) {
+                            Toast.makeText(getActivity(),getString(R.string.upgrade_fw_success_label),Toast.LENGTH_LONG).show();
+                            ll_upgrade.setVisibility(View.GONE);
+                        }
                     }
                 });
     }
@@ -580,17 +673,7 @@ public class HomeActivityFragment extends Fragment {
     }
 
     public int setBatteryLevel(int level) {
-
-        if (level > 3175) {
-            return 100;
-        } else if (level > 3050) {
-            return 75;
-        } else if (level > 2925) {
-            return 50;
-        } else if (level > 2800) {
-            return 25;
-        }
-        return 0;
+        return(int) (((float)level - 2900)/(3400 - 2900))*100;
     }
 
 

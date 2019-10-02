@@ -32,4 +32,11 @@
 
     <string name="reset_label">Reset</string>
 
+    <string name="upgrade_fw_label">upgrade</string>
+
+    <string name="upgrade_fw_success_label">Firmware upgraded successfully</string>
+
+    <string name="upgrade_fw_failure_label">Firmware upgraded successfully</string>
+
+
 </resources>
