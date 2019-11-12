@@ -473,7 +473,7 @@ public class HomeActivityFragment extends Fragment {
                             Log.e(TAG,"It looks like shackle jam ");
                         }
 
-                        tv_ellipse_battery.setText("Battery: "+ setBatteryLevel(state.getBatteryLevel()) + " %");
+                        tv_ellipse_battery.setText("Battery: "+ state.getBatteryLevel() + " %");
                         tv_ellipse_rssi.setText("Rssi Level: "+setRssiLevel(state.getRssiLevel())+" %");
 
                         tv_shacke_position.setText(getString(R.string.shackle_position_label)+ " "+state.isShackleInserted());
@@ -671,12 +671,6 @@ public class HomeActivityFragment extends Fragment {
         }
         return 0;
     }
-
-    public int setBatteryLevel(int level) {
-        return(int) (((float)level - 2900)/(3400 - 2900))*100;
-    }
-
-
 
 
     private void onLockConnected(){
