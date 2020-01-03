@@ -19,6 +19,7 @@ import com.facebook.react.modules.core.RCTNativeAppEventEmitter;
 
 import io.lattis.ellipse.sdk.manager.IEllipseManager;
 import io.lattis.ellipse.sdk.manager.EllipseManager;
+import io.lattis.ellipse.sdk.Ellipse;
 import io.lattis.ellipse.sdk.model.BluetoothLock;
 import io.lattis.ellipse.sdk.exception.BluetoothException;
 import io.lattis.ellipse.sdk.model.Status;
@@ -275,6 +276,146 @@ public class EllipseLock extends ReactContextBaseJavaModule {
         sendEvent("onEllipseLockEvent", map);
       }
     });
+  }
+
+
+  ////Magnetic Auto Lock
+  @ReactMethod
+  public void setMagnetAutoLock(String macId, boolean active, Promise promise) {
+    BluetoothLock lock = new BluetoothLock();
+    lock.setMacId(macId);
+    this._getEllipseManager().setAutoLockWithShackleInsert(lock, active)
+               .subscribeOn(Schedulers.io())
+               .observeOn(AndroidSchedulers.mainThread())
+               .subscribe(new DisposableObserver<Boolean>() {
+
+                   @Override
+                   public void onComplete() {
+                     WritableMap map = Arguments.createMap();
+                     map.putString("magnetAutoLock", "onComplete");
+                     sendEvent("onEllipseLockEvent", map);
+                     promise.resolve(true);
+                   }
+
+                   @Override
+                   public void onError(Throwable e) {
+                       promise.reject(e.toString());
+                   }
+
+                   @Override
+                   public void onNext(Boolean status) {
+                     WritableMap map = Arguments.createMap();
+                     map.putString("magnetAutoLock", "onNext");
+                     map.putBoolean("status", status);
+                     sendEvent("onEllipseLockEvent", map);
+                   }
+               });
+   }
+
+   // Set Touch capacitive
+   @ReactMethod
+   public void setTouchCap(String macId, boolean active, Promise promise) {
+     BluetoothLock lock = new BluetoothLock();
+     lock.setMacId(macId);
+     this._getEllipseManager().setTouchCap(lock, active)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new DisposableObserver<Boolean>() {
+
+                    @Override
+                    public void onComplete() {
+                      WritableMap map = Arguments.createMap();
+                      map.putString("setTouchCap", "onComplete");
+                      sendEvent("onEllipseLockEvent", map);
+                      promise.resolve(true);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+                        promise.reject(e.toString());
+                    }
+
+                    @Override
+                    public void onNext(Boolean status) {
+                      WritableMap map = Arguments.createMap();
+                      map.putString("setTouchCap", "onNext");
+                      map.putBoolean("status", status);
+                      sendEvent("onEllipseLockEvent", map);
+                    }
+                });
+    }
+
+
+
+    // reset Ellipse
+    @ReactMethod
+    private void resetEllipse(String macId, Promise promise) {
+      BluetoothLock lock = new BluetoothLock();
+      lock.setMacId(macId);
+      this._getEllipseManager().reset(lock)
+               .subscribeOn(Schedulers.io())
+               .observeOn(AndroidSchedulers.mainThread())
+               .subscribe(new DisposableObserver<Boolean>() {
+
+                   @Override
+                   public void onComplete() {
+                     WritableMap map = Arguments.createMap();
+                     map.putString("resetEllipse", "onComplete");
+                     sendEvent("onEllipseLockEvent", map);
+                     promise.resolve(true);
+                   }
+
+                   @Override
+                   public void onError(Throwable e) {
+                       promise.reject(e.toString());
+                   }
+
+                   @Override
+                   public void onNext(Boolean status) {
+                     WritableMap map = Arguments.createMap();
+                     map.putString("resetEllipse", "onNext");
+                     map.putBoolean("status", status);
+                     sendEvent("onEllipseLockEvent", map);
+                   }
+               });
+   }
+
+
+   //Observe Lock position
+   @ReactMethod
+   private void observeLockPosition(String macId, Promise promise) {
+     BluetoothLock lock = new BluetoothLock();
+     lock.setMacId(macId);
+     this._getEllipseManager().observeLockPosition(lock)
+              .subscribeOn(Schedulers.io())
+              .observeOn(AndroidSchedulers.mainThread())
+              .subscribeWith(new DisposableObserver<Ellipse.Hardware.Position>() {
+
+                  @Override
+                  public void onComplete() {
+
+                  }
+
+                  @Override
+                  public void onError(Throwable e) {
+                      promise.reject(e.toString());
+                  }
+
+                  @Override
+                  public void onNext(Ellipse.Hardware.Position position) {
+                    WritableMap map = Arguments.createMap();
+                    map.putString("observeLockPosition", "onNext");
+                      if(position== Ellipse.Hardware.Position.LOCKED){
+                        map.putString("position", "LOCKED");
+                      }else if(position== Ellipse.Hardware.Position.UNLOCKED){
+                          map.putString("position", "UNLOCKED");
+                      }else {
+                        map.putString("position", "JAM");
+                      }
+                      sendEvent("onEllipseLockEvent", map);
+
+                  }
+              });
   }
 
   // Events
