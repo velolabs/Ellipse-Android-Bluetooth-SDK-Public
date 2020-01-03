@@ -13,6 +13,7 @@ import {
 const API_TOKEN = ''
 const LOCK_MAC_ID = ''
 var connected = false;
+var isLocked = false;
 
 // BluetoothManager
 const BluetoothManagerModule = NativeModules.BluetoothManager
@@ -54,6 +55,10 @@ const isConnected = async () => {
   return connected
 }
 
+const isEllipseLocked = async () => {
+  return isLocked
+}
+
 const addListener = async (eventType, listener) => {
   BluetoothManagerEmitter.addListener(eventType, listener)
 }
@@ -68,10 +73,18 @@ const handleEllipseLockEvent = (event) => {
          enableBluetoothAndConnect()
       }else if(key == 'connect' && event[key] == 'connected'){
         connected = true;
+        observeLockPosition(LOCK_MAC_ID)
         window.appComponent.setConnectionStatus();
-
+      }else if(key == 'position'){
+        if(event[key] == 'LOCKED'){
+          isLocked = true;
+        }else if(event[key] == 'UNLOCKED'){
+          isLocked = false;
+        }
+        window.appComponent.setConnectionStatus();
       }else if(key == 'connect' && event[key] == 'disconnected'){
-        connected = true;
+        connected = false;
+        window.appComponent.setConnectionStatus();
       }
 
     });
@@ -104,6 +117,41 @@ const setPosition = async (macId, position) => {
   try {
     console.log('setPosition')
     console.log(await EllipseLockModule.setPosition(macId, position))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const observeLockPosition = async (macId) => {
+  try {
+    console.log('setPosition')
+    console.log(await EllipseLockModule.observeLockPosition(macId))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const setMagnetAutoLock = async (macId, active) => {
+  try {
+    console.log('setMagnetAutoLock')
+    console.log(await EllipseLockModule.setMagnetAutoLock(macId, active))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const setTouchCap = async (macId, active) => {
+  try {
+    console.log('setTouchCap')
+    console.log(await EllipseLockModule.setTouchCap(macId, active))
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const reset = async macId => {
+  try {
+    console.log('reset', await EllipseLockModule.resetEllipse(macId))
   } catch (e) {
     console.error(e)
   }
@@ -143,7 +191,7 @@ async function requestLocationPermission() {
 export default class App extends Component {
   constructor(props) {
     super(props)
-    this.state = {connected:false}
+    this.state = {connected:false, isLocked:false}
     this.updateStatus()
     window.appComponent = this
   }
@@ -168,7 +216,8 @@ export default class App extends Component {
     // const enabled = await isBluetoothEnabled()
     // const supported = await isBluetoothSupported()
     const connected = await isConnected()
-    this.setState({connected})
+    const isLocked = await isEllipseLocked()
+    this.setState({connected,isLocked})
     // this.setState({ enabled, supported })
   }
 
@@ -193,14 +242,14 @@ export default class App extends Component {
           Connected to: {LOCK_MAC_ID}
         </Text>
         )}
-        {this.state.connected && (
+        {this.state.connected && !this.state.isLocked && (
         <Button
           style={{fontSize: 10, marginBottom: 25}}
           onPress={() => setPosition(LOCK_MAC_ID, true)}
           title="Lock"
         />
         )}
-        {this.state.connected && (
+        {this.state.connected && this.state.isLocked && (
         <Button
           onPress={() => setPosition(LOCK_MAC_ID, false)}
           title="Unlock"
@@ -208,9 +257,44 @@ export default class App extends Component {
         )}
         {this.state.connected && (
         <Button
+          onPress={() => setMagnetAutoLock(LOCK_MAC_ID,true)}
+          title="Magnetic Auto Lock ON"
+          color="green"
+        />
+        )}
+        {this.state.connected && (
+        <Button
+          onPress={() => setMagnetAutoLock(LOCK_MAC_ID,false)}
+          title="Magnetic Auto Lock OFF"
+          color="green"
+        />
+        )}
+        {this.state.connected && (
+        <Button
+          onPress={() => setTouchCap(LOCK_MAC_ID,true)}
+          title="Touch cap ON"
+          color="orange"
+        />
+        )}
+        {this.state.connected && (
+        <Button
+          onPress={() => setTouchCap(LOCK_MAC_ID,false)}
+          title="Touch cap OFF"
+          color="orange"
+        />
+        )}
+        {this.state.connected && (
+        <Button
+          onPress={() => disconnect(LOCK_MAC_ID)}
+          title="Reset"
+          color="red"
+        />
+        )}
+        {this.state.connected && (
+        <Button
           onPress={() => disconnect(LOCK_MAC_ID)}
           title="Disconnect"
-          color="grey"
+          color="black"
         />
         )}
       </View>

@@ -19,9 +19,15 @@ _____
 #### Dependencies
 
 Please check build.gradle in Android project of this demo for getting list of dependencies
-
+_____
 
 ### __Usage__
 
 1. In App.js, add your token in API_TOKEN variable
 2. In App.js, add Ellipse mac id in LOCK_MAC_ID variable
+_____
+
+### __Installing in device__
+
+1. Connect Android phone to machine
+2. From terminal give command `react-native run-android`
